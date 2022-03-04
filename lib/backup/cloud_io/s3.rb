@@ -109,10 +109,13 @@ module Backup
             unless resp.body["DeleteResult"].empty?
               errors = resp.body["DeleteResult"].map do |result|
                 error = result["Error"]
+                next unless error
                 "Failed to delete: #{error["Key"]}\n" \
                   "Reason: #{error["Code"]}: #{error["Message"]}"
-              end.join("\n")
-              raise Error, "The server returned the following:\n#{errors}"
+              end.reject(&:nil?)
+              return if errors.empty?
+
+              raise Error, "The server returned the following:\n#{errors.join("\n")}"
             end
           end
         end
